@@ -6,32 +6,33 @@ A 2D top-down horror maze survival game inspired by Pacman and Backrooms/liminal
 
 ## 🎮 Gameplay & Mechanics
 
-1. **The Objective**:
-   - You are placed at the beginning of an unknown, sprawling labyrinth.
-   - An exit portal exists deep in the maze, but you **do not know where it is** at the start.
-   - You must explore the dark corridors, avoid entities, and find the illuminated green exit portal to escape to the next level.
+1. **Title, Rules & Difficulty Selection**:
+   - The game begins with an atmospheric Dark Horror Splash Screen detailing the lore, rules, and controls.
+   - Choose your challenge level with <kbd>TAB</kbd> or keys <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd>:
+     - **EASY**: Relaxed entity speeds (~2.5 chase vs 4.2 walk), 3.5-tile detection.
+     - **NORMAL**: Balanced experience (~3.2 chase vs 6.4 sprint), 4.0-tile detection.
+     - **HARD**: Fast relentless predators (~4.0 chase), 4.5-tile detection.
+   - Press <kbd>Space</kbd> or <kbd>Enter</kbd> to begin the 3-level session.
 
-2. **Fog of War & Vision**:
-   - The player only sees an **$11 \times 11$ square section** of the maze around them at any given time.
-   - Outside the active square vision window lies pitch-black darkness.
-   - Cells you have visited remain faintly etched into your memory, but entities and exit beacons remain hidden until illuminated by your active vision window.
-   - Flashlight flickers dynamically, adding to the claustrophobic horror atmosphere.
+2. **Fog Blindness (~4 Tiles Detection Limit)**:
+   - Entities are now **completely BLIND beyond ~4 tiles** due to the dense dark fog!
+   - They cannot spot you from across long corridors anymore.
+   - Footstep hearing is tuned down: walking is silent, sprinting can only be heard within 3.2 tiles.
+   - If an entity pursues you, rounding a corner or breaking line of sight for ~2.8 seconds causes them to lose track and return to patrolling!
 
-3. **Backrooms Horror Entity AI**:
-   - Entities do not follow predictable classical Pacman routines:
-     - **Patrol**: Wanders corridors, turning down hallways and avoiding instant backtracking.
-     - **Line-of-Sight Detection**: Uses raycasting corridor checks. If an entity gets an unobstructed line of sight to you, it shrieks and dashes into high-speed pursuit!
-     - **Sound & Footstep Hearing**: Walking and sprinting emit noise waves. The Hound entity has heightened hearing and will investigate suspicious sounds.
-     - **Stalking & Memory**: When you break line of sight around corners, entities search your last known location before returning to patrol.
-     - **Instant Kill**: Contact with any entity is fatal!
-   - Dynamic heartbeat audio synthesizer: Pulse accelerates and grows louder as entities draw near.
+3. **Entity Types & Eye Visual Intel**:
+   - **The Smiler** (White Glowing Eyes + Creepy Smile): Lurks quietly in the dark.
+   - **The Stalker** (Amber/Yellow Eyes): Navigates corridors methodically.
+   - **The Hound** (Sickly Yellow-Green Eyes): Highly sensitive to sprinting footstep noise.
+   - **BLOOD RED EYES**: Entity has locked visual line-of-sight on you and is in active pursuit! Turn corners immediately to break sight!
 
-4. **Controls**:
-   - `W`, `A`, `S`, `D` or `Arrow Keys`: Move survivor
-   - `Shift`: Sprint (consumes stamina and generates more footstep noise!)
-   - `F`: Toggle flashlight
-   - `R`: Generate a new procedural maze
-   - `Space`: Retry after death / Advance to next level after escape
+6. **Controls**:
+   - <kbd>W</kbd>, <kbd>A</kbd>, <kbd>S</kbd>, <kbd>D</kbd> or <kbd>Arrow Keys</kbd>: Move survivor
+   - <kbd>Shift</kbd>: Sprint (drains stamina and alerts entities through noise vibrations!)
+   - <kbd>F</kbd>: Toggle flashlight
+   - <kbd>Space</kbd> / <kbd>Enter</kbd>: Begin Session / Respawn at Checkpoint / Enter Next Level
+   - <kbd>R</kbd>: Retry level (on death) or re-roll a brand new 3-level session
+   - <kbd>Esc</kbd>: Return to Rules Splash Screen
 
 ---
 
@@ -98,16 +99,28 @@ pacman_maze/
 
 ## 🔨 How to Build and Run
 
-### Running Directly (Standalone):
-All required Qt runtime libraries and MinGW DLLs are deployed directly into the `release\` directory. You can launch the game in either of two ways:
-1. Double-click [`run.bat`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/run.bat) in the project root.
-2. Directly double-click [`release\PacmanMaze.exe`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/release/PacmanMaze.exe).
+### 1. Desktop (Native Windows):
+- Launch by double-clicking [`run.bat`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/run.bat) in the project root.
+- Alternatively, open [`PacmanMaze.pro`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/PacmanMaze.pro) in **Qt Creator** and click **Run (<kbd>Ctrl</kbd> + <kbd>R</kbd>)**.
 
-### Building with Qt / MinGW:
-```powershell
-$env:PATH = "C:\Qt\Tools\mingw1310_64\bin;C:\Qt\6.11.1\mingw_64\bin;" + $env:PATH
-qmake PacmanMaze.pro
-mingw32-make -j4
-windeployqt release\PacmanMaze.exe
-```
-You can also open [`PacmanMaze.pro`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/PacmanMaze.pro) directly in **Qt Creator** and click **Run (Ctrl + R)**.
+### 2. Instant Web Deployment (Browser / Zero Setup):
+A production-ready, zero-dependency HTML5 / Canvas / WebAudio deployment is included in [`web/`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/web/):
+- **Local Run**: Double-click [`run_web.bat`](file:///c:/Users/soura/OneDrive/Desktop/pacman_maze/run_web.bat) to launch the local web server at `http://localhost:8080`.
+- **Cloud Deploy**: Drag-and-drop the `web/` folder directly to [Netlify](https://app.netlify.com/drop), Vercel, or push to GitHub Pages!
+
+### 3. Direct Qt for WebAssembly (WASM / JS):
+The C++ codebase is fully equipped with `#ifdef __EMSCRIPTEN__` and Qt WASM flags:
+1. In `C:\Qt\MaintenanceTool.exe`, ensure the **Qt 6.11.1 -> WebAssembly** kit is checked.
+2. Install Emscripten SDK matching Qt 6.11:
+   ```cmd
+   git clone https://github.com/emscripten-core/emsdk.git
+   cd emsdk
+   emsdk.bat install 3.1.56
+   emsdk.bat activate 3.1.56
+   ```
+3. Run qmake with the WASM kit:
+   ```cmd
+   C:\Qt\6.11.1\wasm_singlethread\bin\qmake.exe PacmanMaze.pro
+   mingw32-make -j4
+   ```
+   This generates `PacmanMaze.html`, `PacmanMaze.js`, and `PacmanMaze.wasm`.

@@ -4,9 +4,13 @@
 #include <QVector>
 #include <QtGlobal>
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__EMSCRIPTEN__)
 #include <windows.h>
 #include <mmsystem.h>
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #endif
 
 class SoundManager {
@@ -19,6 +23,7 @@ public:
     void playFootstep(bool running);
     void playCaught();
     void playEscaped();
+    void playCheckpoint();
     void playFlicker();
 
 private:
@@ -38,6 +43,7 @@ private:
     QByteArray m_wavStepRun;
     QByteArray m_wavCaught;
     QByteArray m_wavEscaped;
+    QByteArray m_wavCheckpoint;
     QByteArray m_wavFlicker;
 
     qint64 m_lastHeartbeatTime = 0;

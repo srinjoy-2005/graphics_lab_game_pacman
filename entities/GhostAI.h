@@ -15,6 +15,7 @@ public:
                 const QPoint &currentTile,
                 const Player &player,
                 const MazeGrid &grid,
+                Difficulty difficulty,
                 QPoint &outTargetTile,
                 double &outSpeed);
 
@@ -24,7 +25,7 @@ public:
     const QPoint &lastKnownPos() const { return m_lastKnownPlayerPos; }
 
 private:
-    void updateSensory(const QPoint &currentTile, const Player &player, const MazeGrid &grid);
+    void updateSensory(const QPoint &currentTile, const Player &player, const MazeGrid &grid, Difficulty difficulty);
     QPoint pickPatrolTarget(const QPoint &currentTile, const MazeGrid &grid);
 
     GhostType m_type;

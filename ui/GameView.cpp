@@ -68,23 +68,68 @@ void GameView::keyPressEvent(QKeyEvent *e) {
     int key = e->key();
     m_heldKeys.insert(key);
 
-    if (key == Qt::Key_R) {
-        m_engine.startNewGame(true);
+    GameState state = m_engine.world().gameState();
+
+    if (key == Qt::Key_Space || key == Qt::Key_Return || key == Qt::Key_Enter) {
+        if (state == GameState::Splash) {
+            m_engine.beginGame();
+            const Player *p = m_engine.localPlayer();
+            if (p) {
+                m_camera.setTarget(p->x(), p->y());
+                m_camera.snapToTarget();
+            }
+        } else if (state == GameState::Caught) {
+            m_engine.respawnAtCheckpoint();
+            const Player *p = m_engine.localPlayer();
+            if (p) {
+                m_camera.setTarget(p->x(), p->y());
+                m_camera.snapToTarget();
+            }
+        } else if (state == GameState::Escaped) {
+            m_engine.nextLevel();
+            const Player *p = m_engine.localPlayer();
+            if (p) {
+                m_camera.setTarget(p->x(), p->y());
+                m_camera.snapToTarget();
+            }
+        } else if (state == GameState::GameOver || state == GameState::Victory) {
+            m_engine.startNewSession(true);
+            m_engine.beginGame();
+            const Player *p = m_engine.localPlayer();
+            if (p) {
+                m_camera.setTarget(p->x(), p->y());
+                m_camera.snapToTarget();
+            }
+        }
+    } else if (key == Qt::Key_R) {
+        if (state == GameState::Caught) {
+            m_engine.restartLevel();
+        } else {
+            m_engine.startNewSession(true);
+            m_engine.beginGame();
+        }
         const Player *p = m_engine.localPlayer();
         if (p) {
             m_camera.setTarget(p->x(), p->y());
             m_camera.snapToTarget();
         }
-    } else if (key == Qt::Key_Space) {
-        GameState state = m_engine.world().gameState();
-        if (state == GameState::Caught) {
-            m_engine.restartLevel();
-        } else if (state == GameState::Escaped) {
-            m_engine.nextLevel();
+    } else if (key == Qt::Key_Escape) {
+        if (state != GameState::Splash) {
+            m_engine.world().setGameState(GameState::Splash);
+        } else {
+            close();
         }
     } else if (key == Qt::Key_F) {
         Player *p = m_engine.world().player(m_engine.localPlayerId());
         if (p) p->toggleFlashlight();
+    } else if (key == Qt::Key_Tab) {
+        m_engine.world().cycleDifficulty();
+    } else if (key == Qt::Key_1) {
+        m_engine.world().setDifficulty(Difficulty::Easy);
+    } else if (key == Qt::Key_2) {
+        m_engine.world().setDifficulty(Difficulty::Normal);
+    } else if (key == Qt::Key_3) {
+        m_engine.world().setDifficulty(Difficulty::Hard);
     }
 
     QWidget::keyPressEvent(e);

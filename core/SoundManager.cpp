@@ -31,14 +31,24 @@ void SoundManager::init() {
     // Escaped (ethereal win tone)
     m_wavEscaped  = generateWav({261.6, 329.6, 392.0, 523.2, 659.2}, {0.15, 0.15, 0.15, 0.20, 0.40}, 0.5, 0);
 
+    // Checkpoint chime (comforting chord)
+    m_wavCheckpoint = generateWav({523.2, 659.2, 783.99}, {0.10, 0.10, 0.25}, 0.45, 0);
+
     // Flashlight flicker spark
     m_wavFlicker  = generateWav({1200.0, 200.0, 1800.0}, {0.02, 0.02, 0.03}, 0.35, 1);
 }
 
 void SoundManager::playRawWav(const QByteArray &data) {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__EMSCRIPTEN__)
     if (!data.isEmpty()) {
         PlaySoundA(reinterpret_cast<LPCSTR>(data.constData()), NULL, SND_MEMORY | SND_ASYNC);
+    }
+#elif defined(__EMSCRIPTEN__)
+    if (!data.isEmpty()) {
+        // Base64 Web Audio playback in browser environment
+        QString b64 = QString::fromLatin1(data.toBase64());
+        QString js = QString("var a = new Audio('data:audio/wav;base64,%1'); a.volume = 0.6; a.play().catch(function(){});").arg(b64);
+        emscripten_run_script(js.toUtf8().constData());
     }
 #endif
 }
@@ -61,13 +71,8 @@ void SoundManager::playScreech() {
     playRawWav(m_wavScreech);
 }
 
-void SoundManager::playFootstep(bool running) {
-    qint64 now = QDateTime::currentMSecsSinceEpoch();
-    int minDelay = running ? 220 : 360;
-    if (now - m_lastStepTime >= minDelay) {
-        m_lastStepTime = now;
-        playRawWav(running ? m_wavStepRun : m_wavStepWalk);
-    }
+void SoundManager::playFootstep(bool /*running*/) {
+    // Footstep movement sound turned off as requested
 }
 
 void SoundManager::playCaught() {
@@ -76,6 +81,10 @@ void SoundManager::playCaught() {
 
 void SoundManager::playEscaped() {
     playRawWav(m_wavEscaped);
+}
+
+void SoundManager::playCheckpoint() {
+    playRawWav(m_wavCheckpoint);
 }
 
 void SoundManager::playFlicker() {

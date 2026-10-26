@@ -18,6 +18,7 @@ private:
     void carvePassages(int cx, int cy, QVector<QVector<MazeCell>> &grid, int cols, int rows);
     void addBraidLoops(QVector<QVector<MazeCell>> &grid, int cols, int rows);
     QPoint findFarthestPoint(const QVector<QVector<MazeCell>> &grid, int cols, int rows, const QPoint &start);
+    void placeCheckpoints(QVector<QVector<MazeCell>> &grid, int cols, int rows, const QPoint &start, const QPoint &exit);
 
     double m_loopProbability;
     QRandomGenerator m_rng;

@@ -17,8 +17,6 @@ private:
     void renderEntities(QPainter &painter, const GameEngine &engine, const Camera &camera);
     void renderPlayer(QPainter &painter, const Player &player, const Camera &camera);
     void renderGhost(QPainter &painter, const Ghost &ghost, const Camera &camera, bool inVision);
-    void renderHUD(QPainter &painter, const GameEngine &engine, int width, int height);
-    void renderOverlay(QPainter &painter, GameState state, int width, int height);
 
     double m_flickerTimer = 0.0;
     double m_pulseTimer = 0.0;

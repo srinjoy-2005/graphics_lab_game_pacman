@@ -22,6 +22,7 @@ public:
     QPoint getNextStepTowards(const QPoint &from, const QPoint &to) const;
 
     void updateVision(const QPoint &centerPos, int squareHalfSize);
+    void resetFog();
 
     int cols() const { return m_cols; }
     int rows() const { return m_rows; }

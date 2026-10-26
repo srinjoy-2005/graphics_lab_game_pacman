@@ -21,24 +21,28 @@ void GhostAI::update(double dt,
                      const QPoint &currentTile,
                      const Player &player,
                      const MazeGrid &grid,
+                     Difficulty difficulty,
                      QPoint &outTargetTile,
                      double &outSpeed) {
     m_stateTimer += dt;
-    updateSensory(currentTile, player, grid);
+    updateSensory(currentTile, player, grid, difficulty);
+
+    double basePatrol = (difficulty == Difficulty::Easy) ? 1.6 : (difficulty == Difficulty::Normal ? 2.0 : 2.5);
+    double baseChase  = (difficulty == Difficulty::Easy) ? 2.5 : (difficulty == Difficulty::Normal ? 3.2 : 4.0);
 
     switch (m_state) {
         case GhostBehaviorState::Chase: {
-            outSpeed = (m_type == GhostType::Stalker) ? Constants::GHOST_STALKER_SPEED : Constants::GHOST_CHASE_SPEED;
+            outSpeed = (m_type == GhostType::Stalker) ? (baseChase * 1.08) : baseChase;
             outTargetTile = player.tilePos();
             break;
         }
 
         case GhostBehaviorState::Investigate: {
-            outSpeed = Constants::GHOST_PATROL_SPEED * 1.25;
+            outSpeed = basePatrol * 1.15;
             outTargetTile = m_lastKnownPlayerPos;
 
-            // If reached the investigation point, search around then resume patrol
-            if (currentTile == m_lastKnownPlayerPos || m_stateTimer > 6.0) {
+            // Search around briefly then resume patrol
+            if (currentTile == m_lastKnownPlayerPos || m_stateTimer > 2.8) {
                 m_state = GhostBehaviorState::Cooldown;
                 m_stateTimer = 0.0;
             }
@@ -46,9 +50,9 @@ void GhostAI::update(double dt,
         }
 
         case GhostBehaviorState::Cooldown: {
-            outSpeed = Constants::GHOST_PATROL_SPEED * 0.5;
+            outSpeed = basePatrol * 0.6;
             outTargetTile = pickPatrolTarget(currentTile, grid);
-            if (m_stateTimer > 2.5) {
+            if (m_stateTimer > 2.0) {
                 m_state = GhostBehaviorState::Patrol;
                 m_stateTimer = 0.0;
             }
@@ -57,22 +61,27 @@ void GhostAI::update(double dt,
 
         case GhostBehaviorState::Patrol:
         default: {
-            outSpeed = Constants::GHOST_PATROL_SPEED;
+            outSpeed = basePatrol;
             outTargetTile = pickPatrolTarget(currentTile, grid);
             break;
         }
     }
 }
 
-void GhostAI::updateSensory(const QPoint &currentTile, const Player &player, const MazeGrid &grid) {
+void GhostAI::updateSensory(const QPoint &currentTile, const Player &player, const MazeGrid &grid, Difficulty difficulty) {
     QPoint playerTile = player.tilePos();
     double dx = player.x() - currentTile.x();
     double dy = player.y() - currentTile.y();
-    double dist = std::sqrt(dx * dx + dy * dy);
+    double dist = std::hypot(dx, dy);
 
-    // 1. Line-of-sight visual check
-    double maxLos = (m_type == GhostType::Smiler) ? Constants::MAX_LINE_OF_SIGHT_TILES * 1.3 : Constants::MAX_LINE_OF_SIGHT_TILES;
-    bool hasVisual = grid.hasLineOfSight(currentTile, playerTile, maxLos);
+    // Fog blindness limit: Entity is completely BLIND past ~4.0 tiles!
+    double maxLos = (difficulty == Difficulty::Easy) ? 3.5 : (difficulty == Difficulty::Normal ? 4.0 : 4.5);
+
+    // 1. Line-of-sight visual check (strictly bounded by fog distance)
+    bool hasVisual = false;
+    if (dist <= maxLos) {
+        hasVisual = grid.hasLineOfSight(currentTile, playerTile, maxLos);
+    }
 
     if (hasVisual) {
         if (m_state != GhostBehaviorState::Chase) {
@@ -84,15 +93,15 @@ void GhostAI::updateSensory(const QPoint &currentTile, const Player &player, con
         return;
     }
 
-    // If was chasing and lost visual, transition to investigate last known point
+    // If was chasing and lost visual (broken around corner or out of 4-tile fog)
     if (m_state == GhostBehaviorState::Chase) {
         m_state = GhostBehaviorState::Investigate;
         m_stateTimer = 0.0;
         return;
     }
 
-    // 2. Sound hearing check (Hound is especially sensitive)
-    double hearingMult = (m_type == GhostType::Hound) ? 1.6 : 1.0;
+    // 2. Sound hearing check (tight radius, player can sneak safely)
+    double hearingMult = (m_type == GhostType::Hound) ? 1.3 : 0.9;
     double effectiveNoise = player.noiseRadius() * hearingMult;
 
     if (effectiveNoise > 0.1 && dist <= effectiveNoise) {

@@ -3,7 +3,10 @@ CONFIG += c++17
 TARGET = PacmanMaze
 TEMPLATE = app
 
-win32: LIBS += -lwinmm
+win32:!wasm: LIBS += -lwinmm
+wasm {
+    QMAKE_LFLAGS += -s WASM=1 -s ALLOW_MEMORY_GROWTH=1
+}
 
 INCLUDEPATH += $$PWD
 
@@ -24,6 +27,7 @@ HEADERS += \
     engine/GameEngine.h \
     ui/Camera.h \
     ui/HorrorRenderer.h \
+    ui/HorrorOverlay.h \
     ui/GameView.h
 
 SOURCES += \
@@ -39,4 +43,5 @@ SOURCES += \
     engine/GameEngine.cpp \
     ui/Camera.cpp \
     ui/HorrorRenderer.cpp \
+    ui/HorrorOverlay.cpp \
     ui/GameView.cpp

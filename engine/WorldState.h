@@ -34,11 +34,33 @@ public:
     int level() const { return m_level; }
     void setLevel(int lvl) { m_level = lvl; }
 
+    Difficulty difficulty() const { return m_difficulty; }
+    void setDifficulty(Difficulty diff) { m_difficulty = diff; }
+    void cycleDifficulty() {
+        if (m_difficulty == Difficulty::Easy) m_difficulty = Difficulty::Normal;
+        else if (m_difficulty == Difficulty::Normal) m_difficulty = Difficulty::Hard;
+        else m_difficulty = Difficulty::Easy;
+    }
+
+    int lives() const { return m_lives; }
+    void setLives(int lives) { m_lives = lives; }
+    void decrementLife() { if (m_lives > 0) --m_lives; }
+
+    const QPoint &currentCheckpoint() const { return m_currentCheckpoint; }
+    void setCurrentCheckpoint(const QPoint &pt) { m_currentCheckpoint = pt; }
+
+    QVector<MazeGrid> &sessionLevels() { return m_sessionLevels; }
+    const QVector<MazeGrid> &sessionLevels() const { return m_sessionLevels; }
+
 private:
     uint64_t m_tick = 0;
     int m_level = 1;
-    GameState m_gameState = GameState::Ready;
+    int m_lives = 3;
+    Difficulty m_difficulty = Difficulty::Normal;
+    QPoint m_currentCheckpoint;
+    GameState m_gameState = GameState::Splash;
     MazeGrid m_grid;
+    QVector<MazeGrid> m_sessionLevels;
     QMap<uint32_t, Player> m_players;
     QVector<Ghost> m_ghosts;
 };

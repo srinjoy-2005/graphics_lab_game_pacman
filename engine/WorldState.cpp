@@ -4,9 +4,12 @@ WorldState::WorldState() {}
 
 void WorldState::reset() {
     m_tick = 0;
-    m_gameState = GameState::Ready;
+    m_level = 1;
+    m_lives = 3;
+    m_gameState = GameState::Splash;
     m_players.clear();
     m_ghosts.clear();
+    m_sessionLevels.clear();
 }
 
 void WorldState::addPlayer(const Player &player) {

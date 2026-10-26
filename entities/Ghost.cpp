@@ -33,13 +33,13 @@ QColor Ghost::eyeColor() const {
     return QColor(255, 255, 255);
 }
 
-void Ghost::update(double dt, const Player &player, const MazeGrid &grid) {
+void Ghost::update(double dt, const Player &player, const MazeGrid &grid, Difficulty difficulty) {
     m_glowTimer += dt * (m_ai.isChasing() ? 8.0 : 3.0);
     m_eyeGlow = 0.7 + 0.3 * std::sin(m_glowTimer);
 
     QPoint targetTile;
-    double speed = 2.5;
-    m_ai.update(dt, tilePos(), player, grid, targetTile, speed);
+    double speed = 2.0;
+    m_ai.update(dt, tilePos(), player, grid, difficulty, targetTile, speed);
 
     stepTowards(targetTile, dt, speed, grid);
 }

@@ -1,4 +1,5 @@
 #include "ui/HorrorRenderer.h"
+#include "ui/HorrorOverlay.h"
 #include "core/Constants.h"
 #include <QPainterPath>
 #include <cmath>
@@ -12,6 +13,12 @@ void HorrorRenderer::render(QPainter &painter, const GameEngine &engine, const C
     // 1. Dark Void background
     painter.fillRect(0, 0, width, height, Constants::COLOR_DARK_VOID);
 
+    // If on splash screen, render rules and title
+    if (engine.world().gameState() == GameState::Splash) {
+        HorrorOverlay::renderSplashScreen(painter, engine, m_pulseTimer, width, height);
+        return;
+    }
+
     // 2. Render Maze Tiles
     renderTiles(painter, engine, camera);
 
@@ -21,9 +28,9 @@ void HorrorRenderer::render(QPainter &painter, const GameEngine &engine, const C
     // 4. Render Square Vision Shroud (Mask outside of square)
     renderSquareVisionShroud(painter, engine.localPlayer(), camera, width, height);
 
-    // 5. Render HUD and Overlays
-    renderHUD(painter, engine, width, height);
-    renderOverlay(painter, engine.world().gameState(), width, height);
+    // 5. Render HUD and State Overlays
+    HorrorOverlay::renderHUD(painter, engine, width, height);
+    HorrorOverlay::renderStateOverlay(painter, engine, width, height);
 }
 
 void HorrorRenderer::renderTiles(QPainter &painter, const GameEngine &engine, const Camera &camera) {
@@ -63,6 +70,29 @@ void HorrorRenderer::renderTiles(QPainter &painter, const GameEngine &engine, co
                 painter.setPen(seamColor);
                 painter.setBrush(Qt::NoBrush);
                 painter.drawRect(rect);
+            } else if (c.type == TileType::Checkpoint) {
+                QColor floorColor = Constants::COLOR_FLOOR;
+                floorColor.setAlphaF(light);
+                painter.fillRect(rect, floorColor);
+
+                if (c.inSquareVision) {
+                    bool act = c.checkpointActivated;
+                    double pulse = 0.6 + 0.4 * std::sin(m_pulseTimer * 3.5);
+                    QColor cpColor = act ? Constants::COLOR_CHECKPOINT_ACTIVE : Constants::COLOR_CHECKPOINT_INACTIVE;
+                    cpColor.setAlphaF(static_cast<float>(pulse));
+
+                    painter.setBrush(cpColor);
+                    painter.setPen(QPen(Qt::white, 1));
+                    painter.drawEllipse(rect.center(), ts * 0.38, ts * 0.38);
+
+                    painter.setPen(act ? Qt::black : Qt::white);
+                    painter.setBrush(Qt::NoBrush);
+                    QFont font = painter.font();
+                    font.setPointSize(7);
+                    font.setBold(true);
+                    painter.setFont(font);
+                    painter.drawText(rect, Qt::AlignCenter, act ? "SAFE" : "SAVE");
+                }
             } else if (c.type == TileType::ExitDoor) {
                 if (c.inSquareVision) {
                     double pulse = 0.7 + 0.3 * std::sin(m_pulseTimer * 4.0);
@@ -100,7 +130,7 @@ void HorrorRenderer::renderSquareVisionShroud(QPainter &painter, const Player *p
     QPainterPath shroud = fullScreen.subtracted(visionBox);
     painter.fillPath(shroud, Constants::COLOR_DARK_VOID);
 
-    // 2. Square Vision Window Border (Must explicitly use Qt::NoBrush!)
+    // 2. Square Vision Window Border
     painter.setBrush(Qt::NoBrush);
     painter.setPen(QPen(QColor(90, 80, 55, 200), 2));
     painter.drawRect(visionRect);
@@ -168,7 +198,7 @@ void HorrorRenderer::renderPlayer(QPainter &painter, const Player &player, const
         painter.fillPath(cone, QColor(255, 245, 200, 35));
     }
 
-    // Survivor body (hazmat suit)
+    // Survivor body
     painter.setBrush(QColor(245, 215, 30));
     painter.setPen(QPen(QColor(30, 30, 20), 2));
     painter.drawEllipse(p, r, r);
@@ -213,78 +243,5 @@ void HorrorRenderer::renderGhost(QPainter &painter, const Ghost &ghost, const Ca
             painter.setBrush(Qt::NoBrush);
             painter.drawArc(QRectF(p.x() - r * 0.5, p.y() - r * 0.2, r, r * 0.6), 200 * 16, 140 * 16);
         }
-    }
-}
-
-void HorrorRenderer::renderHUD(QPainter &painter, const GameEngine &engine, int width, int /*height*/) {
-    painter.fillRect(0, 0, width, Constants::HUD_HEIGHT, QColor(14, 14, 18, 230));
-    painter.setPen(QColor(40, 40, 50));
-    painter.drawLine(0, Constants::HUD_HEIGHT, width, Constants::HUD_HEIGHT);
-
-    const Player *p = engine.localPlayer();
-    if (!p) return;
-
-    QFont font = painter.font();
-    font.setFamily("Consolas");
-    font.setBold(true);
-    painter.setFont(font);
-
-    // Level info
-    painter.setPen(QColor(180, 180, 180));
-    painter.drawText(16, 20, QString("LEVEL %1 : THE LABYRINTH").arg(engine.world().level()));
-    painter.setPen(QColor(120, 120, 120));
-    painter.drawText(16, 38, "FIND THE UNMARKED EXIT PORTAL");
-
-    // Stamina Bar
-    int barX = 320, barY = 16, barW = 120, barH = 14;
-    painter.setPen(QColor(60, 60, 60));
-    painter.setBrush(Qt::NoBrush);
-    painter.drawRect(barX, barY, barW, barH);
-    painter.fillRect(barX + 2, barY + 2, static_cast<int>((barW - 4) * p->stamina()), barH - 4,
-                     p->stamina() > 0.25 ? QColor(220, 190, 40) : QColor(220, 50, 50));
-    painter.setPen(Qt::white);
-    painter.drawText(barX, barY + barH + 12, "STAMINA [SHIFT]");
-
-    // Heartbeat Monitor
-    double ghostDist = engine.closestGhostDistance();
-    int bpm = static_cast<int>(70 + qMax(0.0, (12.0 - ghostDist) * 10.0));
-    QColor heartColor = (bpm > 110) ? Constants::COLOR_BLOOD_RED : QColor(100, 200, 120);
-    painter.setPen(heartColor);
-    painter.drawText(500, 28, QString("PULSE: %1 BPM").arg(bpm));
-
-    // Status Alert
-    GameState state = engine.world().gameState();
-    if (state == GameState::Spotted) {
-        painter.setPen(Constants::COLOR_BLOOD_RED);
-        painter.drawText(650, 28, "!! ENTITY SPOTTED !!");
-    } else {
-        painter.setPen(QColor(140, 140, 140));
-        painter.drawText(650, 28, "[R] NEW MAZE");
-    }
-}
-
-void HorrorRenderer::renderOverlay(QPainter &painter, GameState state, int width, int height) {
-    if (state == GameState::Caught) {
-        painter.fillRect(0, 0, width, height, QColor(140, 10, 10, 200));
-        painter.setPen(Qt::white);
-        QFont f = painter.font();
-        f.setPointSize(28);
-        f.setBold(true);
-        painter.setFont(f);
-        painter.drawText(QRect(0, height / 2 - 60, width, 60), Qt::AlignCenter, "YOU WERE CONSUMED");
-        f.setPointSize(14);
-        painter.setFont(f);
-        painter.drawText(QRect(0, height / 2 + 10, width, 40), Qt::AlignCenter, "Press [SPACE] or [R] to Try Again");
-    } else if (state == GameState::Escaped) {
-        painter.fillRect(0, 0, width, height, QColor(20, 80, 40, 200));
-        painter.setPen(Qt::white);
-        QFont f = painter.font();
-        f.setPointSize(28);
-        f.setBold(true);
-        painter.setFont(f);
-        painter.drawText(QRect(0, height / 2 - 60, width, 60), Qt::AlignCenter, "YOU ESCAPED THE LEVEL");
-        f.setPointSize(14);
-        painter.setFont(f);
-        painter.drawText(QRect(0, height / 2 + 10, width, 40), Qt::AlignCenter, "Press [SPACE] for Next Level");
     }
 }

@@ -9,7 +9,7 @@ public:
     Ghost(uint32_t id = 100, GhostType type = GhostType::Smiler);
 
     void reset(const QPoint &startTile);
-    void update(double dt, const Player &player, const MazeGrid &grid);
+    void update(double dt, const Player &player, const MazeGrid &grid, Difficulty difficulty);
 
     GhostType type() const { return m_ai.type(); }
     GhostBehaviorState behaviorState() const { return m_ai.state(); }

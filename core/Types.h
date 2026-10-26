@@ -11,12 +11,21 @@ enum class Direction {
     Right
 };
 
+enum class Difficulty {
+    Easy,
+    Normal,
+    Hard
+};
+
 enum class GameState {
+    Splash,      // Rules and introduction screen
     Ready,
     Exploring,
     Spotted,
-    Caught,
-    Escaped,
+    Caught,      // Lost a life; respawn at checkpoint if lives remain
+    GameOver,    // All 3 lives lost; session terminated
+    Escaped,     // Level cleared
+    Victory,     // All 3 levels completed!
     Paused
 };
 
@@ -36,7 +45,8 @@ enum class GhostBehaviorState {
 enum class TileType {
     Wall,
     Floor,
-    ExitDoor
+    ExitDoor,
+    Checkpoint
 };
 
 struct PlayerInput {

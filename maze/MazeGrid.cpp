@@ -148,3 +148,12 @@ void MazeGrid::updateVision(const QPoint &centerPos, int squareHalfSize) {
         }
     }
 }
+
+void MazeGrid::resetFog() {
+    for (int y = 0; y < m_rows; ++y) {
+        for (int x = 0; x < m_cols; ++x) {
+            m_cells[y][x].inSquareVision = false;
+            m_cells[y][x].visitedByPlayer = false;
+        }
+    }
+}

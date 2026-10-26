@@ -10,5 +10,6 @@ release/WorldState.o
 release/GameEngine.o
 release/Camera.o
 release/HorrorRenderer.o
+release/HorrorOverlay.o
 release/GameView.o
 release/moc_GameView.o

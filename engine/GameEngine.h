@@ -8,9 +8,11 @@ class GameEngine {
 public:
     GameEngine();
 
-    void startNewGame(bool procedural = true);
+    void startNewSession(bool procedural = true);
+    void beginGame();
     void nextLevel();
     void restartLevel();
+    void respawnAtCheckpoint();
 
     void update(double dt, const PlayerInput &localInput);
 
@@ -23,6 +25,8 @@ public:
     double closestGhostDistance() const;
 
 private:
+    void generateSessionLevels();
+    void loadLevel(int levelNum);
     void spawnGhosts(int count);
     void checkCollisions();
 

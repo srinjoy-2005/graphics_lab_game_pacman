@@ -10,5 +10,6 @@ debug/WorldState.o
 debug/GameEngine.o
 debug/Camera.o
 debug/HorrorRenderer.o
+debug/HorrorOverlay.o
 debug/GameView.o
 debug/moc_GameView.o

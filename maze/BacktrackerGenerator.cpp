@@ -47,6 +47,9 @@ bool BacktrackerGenerator::generate(int cols,
     outExitPos = findFarthestPoint(grid, cols, rows, outStartPos);
     grid[outExitPos.y()][outExitPos.x()].type = TileType::ExitDoor;
 
+    // Place midway checkpoints for session respawn
+    placeCheckpoints(grid, cols, rows, outStartPos, outExitPos);
+
     return true;
 }
 
@@ -135,4 +138,78 @@ QPoint BacktrackerGenerator::findFarthestPoint(const QVector<QVector<MazeCell>> 
     }
 
     return farthest;
+}
+
+void BacktrackerGenerator::placeCheckpoints(QVector<QVector<MazeCell>> &grid,
+                                            int cols,
+                                            int rows,
+                                            const QPoint &start,
+                                            const QPoint &exit) {
+    QVector<QVector<int>> dist(rows, QVector<int>(cols, -1));
+    QQueue<QPoint> queue;
+
+    dist[start.y()][start.x()] = 0;
+    queue.enqueue(start);
+
+    const int dx[] = {0, 0, -1, 1};
+    const int dy[] = {-1, 1, 0, 0};
+
+    while (!queue.isEmpty()) {
+        QPoint curr = queue.dequeue();
+        int d = dist[curr.y()][curr.x()];
+
+        for (int i = 0; i < 4; ++i) {
+            int nx = curr.x() + dx[i];
+            int ny = curr.y() + dy[i];
+
+            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                if (grid[ny][nx].isWalkable() && dist[ny][nx] == -1) {
+                    dist[ny][nx] = d + 1;
+                    queue.enqueue(QPoint(nx, ny));
+                }
+            }
+        }
+    }
+
+    int exitDist = dist[exit.y()][exit.x()];
+    if (exitDist < 10) return;
+
+    // Checkpoint 1 at ~45% distance
+    int target1 = static_cast<int>(exitDist * 0.45);
+    QPoint best1(-1, -1);
+    int bestDiff1 = 9999;
+
+    // Checkpoint 2 at ~75% distance (for larger mazes)
+    int target2 = static_cast<int>(exitDist * 0.75);
+    QPoint best2(-1, -1);
+    int bestDiff2 = 9999;
+
+    for (int y = 1; y < rows - 1; ++y) {
+        for (int x = 1; x < cols - 1; ++x) {
+            if (grid[y][x].type == TileType::Floor) {
+                int d = dist[y][x];
+                if (d > 0) {
+                    int diff1 = std::abs(d - target1);
+                    if (diff1 < bestDiff1) {
+                        bestDiff1 = diff1;
+                        best1 = QPoint(x, y);
+                    }
+                    if (exitDist >= 24) {
+                        int diff2 = std::abs(d - target2);
+                        if (diff2 < bestDiff2) {
+                            bestDiff2 = diff2;
+                            best2 = QPoint(x, y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (best1 != QPoint(-1, -1) && best1 != start && best1 != exit) {
+        grid[best1.y()][best1.x()].type = TileType::Checkpoint;
+    }
+    if (best2 != QPoint(-1, -1) && best2 != start && best2 != exit && best2 != best1) {
+        grid[best2.y()][best2.x()].type = TileType::Checkpoint;
+    }
 }
