@@ -1,0 +1,14 @@
+debug/main.o
+debug/SoundManager.o
+debug/BacktrackerGenerator.o
+debug/StaticMazeGenerator.o
+debug/MazeGrid.o
+debug/Player.o
+debug/GhostAI.o
+debug/Ghost.o
+debug/WorldState.o
+debug/GameEngine.o
+debug/Camera.o
+debug/HorrorRenderer.o
+debug/GameView.o
+debug/moc_GameView.o

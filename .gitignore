@@ -1,0 +1,48 @@
+# =========================================================================
+# Qt Creator & User-Specific Settings
+# =========================================================================
+*.pro.user
+*.pro.user.*
+*.CMakeLists.txt.user
+*.qbs.user
+*.qbs.user.*
+.qtcreator/
+.kdev4/
+
+# =========================================================================
+# Build Directories & Artifacts (Shadow Builds)
+# =========================================================================
+# Excludes default shadow build folders created by Qt Creator
+build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.json
+*.gch
+
+# =========================================================================
+# Compiled Binaries and Objects
+# =========================================================================
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+
+# =========================================================================
+# Generated Source Files (Qt Meta-Object System)
+# =========================================================================
+# These are generated automatically during compiling. Do not track them.
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Compiled translation binaries
+*.qm

@@ -1,0 +1,14 @@
+release/main.o
+release/SoundManager.o
+release/BacktrackerGenerator.o
+release/StaticMazeGenerator.o
+release/MazeGrid.o
+release/Player.o
+release/GhostAI.o
+release/Ghost.o
+release/WorldState.o
+release/GameEngine.o
+release/Camera.o
+release/HorrorRenderer.o
+release/GameView.o
+release/moc_GameView.o
