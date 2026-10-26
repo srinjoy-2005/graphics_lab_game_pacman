@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pacman Maze: Survival In The Dark (Web Edition)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #060609;
+      color: #eee;
+      font-family: 'Consolas', 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+      width: 784px;
+      height: 784px;
+      background: #000;
+      box-shadow: 0 0 40px rgba(0,0,0,0.9);
+      border: 1px solid #222;
+    }
+    canvas {
+      display: block;
+      width: 784px;
+      height: 784px;
+      image-rendering: pixelated;
+    }
+    .tips {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="canvas" width="784" height="784"></canvas>
+  </div>
+  <div class="tips">
+    [WASD / Arrows] Move | [SHIFT] Sprint | [F] Flashlight | [TAB / 1,2,3] Difficulty | [R] Restart | [ESC] Menu
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
